@@ -1,0 +1,8 @@
+import { Module } from '@nestjs/common';
+import { PeerModule } from './peer/peer.module';
+import { PrismaModule } from './components/prisma/prisma.module';
+
+@Module({
+  imports: [PeerModule, PrismaModule],
+})
+export class AppModule {}
