@@ -1,0 +1,8 @@
+export type CreatePeerDTO = {
+      peerName String @unique()
+      publicKey String
+      PresharedKey String
+      AllowedIps String @unique()
+      shelflife DateTime
+}
+

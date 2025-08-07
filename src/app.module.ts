@@ -5,6 +5,6 @@ import { PeerModule } from './peer/peer.module';
 import { WgcoreModule } from './components/wgcore/wgcore.module';
 
 @Module({
-  imports: [PeerModule, WgcoreModule],
+  imports: [PeerModule, WgcoreModule, LoggerModule, PrismaModule],
 })
 export class AppModule {}
