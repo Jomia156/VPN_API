@@ -9,12 +9,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.WgcoreModule = void 0;
 const common_1 = require("@nestjs/common");
 const wgcore_service_1 = require("./wgcore.service");
+const prisma_module_1 = require("../prisma/prisma.module");
 let WgcoreModule = class WgcoreModule {
 };
 exports.WgcoreModule = WgcoreModule;
 exports.WgcoreModule = WgcoreModule = __decorate([
     (0, common_1.Module)({
-        providers: [wgcore_service_1.WgcoreService]
+        providers: [wgcore_service_1.WgcoreService],
+        imports: [prisma_module_1.PrismaModule]
     })
 ], WgcoreModule);
 //# sourceMappingURL=wgcore.module.js.map
