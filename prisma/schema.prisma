@@ -10,11 +10,10 @@ datasource db {
 
 
 model peer {
-      id String @id @default(uuid())
       peerName String @unique()
-      publicKey String
+      PublicKey String
       PresharedKey String
-      AllowedIps String @unique()
+      AllowedIPs String @unique()
       created_date DateTime @default(now())
       shelflife DateTime
       banned Boolean @default(false)
