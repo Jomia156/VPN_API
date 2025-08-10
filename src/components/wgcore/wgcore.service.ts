@@ -1,3 +1,4 @@
+import  { execSync } from 'child_process';
 import { Injectable } from '@nestjs/common';
 import {CreatePeerDTO, FilterDTO, UpdatePeerDTO} from './wgcore.dto'
 import {PrismaService} from "../prisma/prisma.service"
@@ -26,6 +27,7 @@ export class WgcoreService {
     //this._updatePeer({id:"test", banned:true}) 
     this._removePeer("test") 
     this.regenWgConf()
+    console.log(this._genPeerConfigObject())
 	}
 
 	async _getAllPeers() {
@@ -56,6 +58,17 @@ export class WgcoreService {
       allPeers+=`\n\n[Peer]\nPublicKey=${peer.PublicKey}\nPresharedKey=${peer.PresharedKey}\nAllowedIPs=${peer.AllowedIPs}`
     })
     writeFileSync(this.wgConfPath, allPeers)
+  }
+
+   _genPeerConfigObject() {
+  let commandForGenKeys = 'wg genkey | tee private.key | wg pubkey > public.key && cat private.key && cat public.key && wg genpsk && rm public.key private.key'
+ 
+  let output = execSync(commandForGenKeys).toString()
+  return { 
+    PrivateKey :output.split("\n")[0],
+    PublicKey :output.split("\n")[1],
+    PresharedKey :output.split("\n")[2]
+  }
   }
 }
  

@@ -27,4 +27,9 @@ export declare class WgcoreService {
     _updatePeer(updatePeerData: UpdatePeerDTO): Promise<void>;
     _removePeer(id: any): Promise<void>;
     regenWgConf(): Promise<void>;
+    _genPeerConfigObject(): {
+        PrivateKey: string;
+        PublicKey: string;
+        PresharedKey: string;
+    };
 }

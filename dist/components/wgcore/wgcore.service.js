@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WgcoreService = void 0;
+const child_process_1 = require("child_process");
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const fs_1 = require("fs");
@@ -32,6 +33,7 @@ let WgcoreService = class WgcoreService {
         this._getPeersByFilter({ peerName: "test" }).then(data => console.log(data));
         this._removePeer("test");
         this.regenWgConf();
+        console.log(this._genPeerConfigObject());
     }
     async _getAllPeers() {
         return await this.prisma.peer.findMany().catch(e => []);
@@ -55,6 +57,15 @@ let WgcoreService = class WgcoreService {
             allPeers += `\n\n[Peer]\nPublicKey=${peer.PublicKey}\nPresharedKey=${peer.PresharedKey}\nAllowedIPs=${peer.AllowedIPs}`;
         });
         (0, fs_1.writeFileSync)(this.wgConfPath, allPeers);
+    }
+    _genPeerConfigObject() {
+        let commandForGenKeys = 'wg genkey | tee private.key | wg pubkey > public.key && cat private.key && cat public.key && wg genpsk && rm public.key private.key';
+        let output = (0, child_process_1.execSync)(commandForGenKeys).toString();
+        return {
+            PrivateKey: output.split("\n")[0],
+            PublicKey: output.split("\n")[1],
+            PresharedKey: output.split("\n")[2]
+        };
     }
 };
 exports.WgcoreService = WgcoreService;
