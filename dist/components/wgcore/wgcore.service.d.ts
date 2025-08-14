@@ -1,12 +1,18 @@
-import { CreatePeerDTO, FilterDTO, UpdatePeerDTO } from './wgcore.dto';
+import { CreatePeerDTO, FilterDTO, UpdatePeerDTO, PeerDTO } from './wgcore.dto';
 import { PrismaService } from "../prisma/prisma.service";
 export declare class WgcoreService {
     private prisma;
     private wgConfHeader;
     private wgConfPath;
+    private wgServerIp;
+    private wgServerPort;
+    private wgPublicKey;
+    private wgPrivateKey;
     constructor(prisma: PrismaService);
-    _getAllPeers(): Promise<{
+    getAllPeers(): Promise<{
+        id: number;
         peerName: string;
+        PrivateKey: string;
         PublicKey: string;
         PresharedKey: string;
         AllowedIPs: string;
@@ -14,9 +20,11 @@ export declare class WgcoreService {
         shelflife: Date;
         banned: boolean;
     }[] | never[]>;
-    _createNewPeer(peerData: CreatePeerDTO): Promise<void>;
-    _getPeersByFilter(filter: FilterDTO): Promise<{
+    createNewPeer(peer: CreatePeerDTO): Promise<void>;
+    getPeersByFilter(filter: FilterDTO): Promise<{
+        id: number;
         peerName: string;
+        PrivateKey: string;
         PublicKey: string;
         PresharedKey: string;
         AllowedIPs: string;
@@ -24,12 +32,15 @@ export declare class WgcoreService {
         shelflife: Date;
         banned: boolean;
     }[] | never[]>;
-    _updatePeer(updatePeerData: UpdatePeerDTO): Promise<void>;
-    _removePeer(id: any): Promise<void>;
+    updatePeer(updatePeerData: UpdatePeerDTO): Promise<void>;
+    removePeer(id: any): Promise<void>;
     regenWgConf(): Promise<void>;
-    _genPeerConfigObject(): {
+    genPeerKeys(): {
         PrivateKey: string;
         PublicKey: string;
         PresharedKey: string;
     };
+    genPeerConfig(peer: PeerDTO): string;
+    genPeerConnectConfig(peer: PeerDTO): string;
+    getNewPeerId(): Promise<number>;
 }

@@ -1,6 +1,6 @@
 import  { execSync } from 'child_process';
 import { Injectable } from '@nestjs/common';
-import {CreatePeerDTO, FilterDTO, UpdatePeerDTO} from './wgcore.dto'
+import {CreatePeerDTO, FilterDTO, UpdatePeerDTO, PeerDTO} from './wgcore.dto'
 import {PrismaService} from "../prisma/prisma.service"
 import {readFileSync, writeFileSync} from "fs"
 
@@ -8,50 +8,47 @@ import {readFileSync, writeFileSync} from "fs"
 export class WgcoreService {
   private wgConfHeader:string
   private wgConfPath:string
+  private wgServerIp:string
+  private wgServerPort:number
+  private wgPublicKey:string
+  private wgPrivateKey:string
+  
 	constructor(private prisma:PrismaService) {
     this.wgConfHeader = (readFileSync(process.env.WGHeaderPath || "")).toString()
     this.wgConfPath = process.env.WGConfPath || ""
+    this.wgServerIp = process.env.WGServerIp || ""
+    this.wgServerPort= Number(process.env.WGServerPort) || 0
+    this.wgPublicKey = process.env.WGPublicKey || ""
+    this.wgPrivateKey = process.env.WGPrivateKey || ""
 
-
-		const date = new Date().toISOString()
-
-		this._createNewPeer({
-			peerName:"test2",
-			PublicKey:"randKey1",
-			PresharedKey:"randKey2",
-			AllowedIPs:"1.1.1.3", 
-			shelflife:date
-		})
-		//this._getAllPeers().then((data)=>console.log(data))
-		this._getPeersByFilter({peerName:"test"}).then(data=>console.log(data))
-    //this._updatePeer({id:"test", banned:true}) 
-    this._removePeer("test") 
-    this.regenWgConf()
-    console.log(this._genPeerConfigObject())
+    
+    this.removePeer(1)
+    this.getNewPeerId().then(data=>console.log(data))
+    this.getAllPeers().then(data=>console.log(data))
 	}
 
-	async _getAllPeers() {
+	async getAllPeers() {
 		return await this.prisma.peer.findMany().catch(e=>[])           
 	}
 
-	async _createNewPeer(peerData:CreatePeerDTO) {
-		await this.prisma.peer.create({data:peerData}).catch(e=>e.data)
+	async createNewPeer(peer:CreatePeerDTO) {
+		await this.prisma.peer.create({data:peer}).catch(e=>e.data)
 	}
 
-  async _getPeersByFilter(filter:FilterDTO) {
+  async getPeersByFilter(filter:FilterDTO) {
    return await this.prisma.peer.findMany({where:filter}).catch(e=>[])
   }	
 
-  async _updatePeer(updatePeerData:UpdatePeerDTO) {
-    await this.prisma.peer.update({where:{peerName:updatePeerData.id}, data: updatePeerData})
+  async updatePeer(updatePeerData:UpdatePeerDTO) {
+    await this.prisma.peer.update({where:{id:updatePeerData.id}, data: updatePeerData})
   }
 	
-  async _removePeer(id) {
-    await this.prisma.peer.delete({where:{peerName:id}}).catch(e=>null)
+  async removePeer(id) {
+    await this.prisma.peer.delete({where:{id}}).catch(e=>null)
   }
 
   async regenWgConf() {
-    const activePeers = await this._getPeersByFilter({banned:false})
+    const activePeers = await this.getPeersByFilter({banned:false})
     let allPeers=this.wgConfHeader
 
     activePeers.forEach(peer=>{
@@ -60,15 +57,40 @@ export class WgcoreService {
     writeFileSync(this.wgConfPath, allPeers)
   }
 
-   _genPeerConfigObject() {
-  let commandForGenKeys = 'wg genkey | tee private.key | wg pubkey > public.key && cat private.key && cat public.key && wg genpsk && rm public.key private.key'
- 
-  let output = execSync(commandForGenKeys).toString()
-  return { 
-    PrivateKey :output.split("\n")[0],
-    PublicKey :output.split("\n")[1],
-    PresharedKey :output.split("\n")[2]
-  }
-  }
+  genPeerKeys() {
+    let commandForGenKeys = 'wg genkey | tee private.key | wg pubkey > public.key && cat private.key && cat public.key && wg genpsk && rm public.key private.key' 
+    let output = execSync(commandForGenKeys).toString()
+    return { 
+      PrivateKey :output.split("\n")[0],
+      PublicKey :output.split("\n")[1],
+      PresharedKey :output.split("\n")[2]
+    }
+   }
+
+   genPeerConfig(peer:PeerDTO) {
+    let peerString = "[Peer]"
+    peerString += "\nPublicKey="+peer.PublicKey
+    peerString += "\nPresharedKey="+peer.PresharedKey
+    peerString += "\nAllowedIPs="+peer.AllowedIPs
+    return peerString 
+   }
+
+   genPeerConnectConfig(peer:PeerDTO) {
+    let clientConfigString = "[Interface]"
+    clientConfigString += "\nPrivateKey="+peer.PrivateKey
+    clientConfigString += "\nAddress="+peer.AllowedIPs
+    clientConfigString += "\nDNS=1.1.1.1,8.8.8.8"
+    clientConfigString += "\n\n[Peer]"
+    clientConfigString += "\nPublicKey="+this.wgPublicKey
+    clientConfigString += "\nPresharedKey="+peer.PresharedKey
+    clientConfigString += "\nEndpoint="+this.wgServerIp+":"+this.wgServerPort
+    clientConfigString += "\nAllowedIPs=0.0.0.0/0,::/0"
+    return clientConfigString    
+   }
+
+   async getNewPeerId() {
+    return await this.prisma.peer.findMany({orderBy:{id:"asc"}, select:{id:true}, take:-1}).then(data=> (data[0]?.id | 0)+1)
+   }
+
 }
  

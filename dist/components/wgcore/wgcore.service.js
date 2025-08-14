@@ -18,47 +18,46 @@ let WgcoreService = class WgcoreService {
     prisma;
     wgConfHeader;
     wgConfPath;
+    wgServerIp;
+    wgServerPort;
+    wgPublicKey;
+    wgPrivateKey;
     constructor(prisma) {
         this.prisma = prisma;
         this.wgConfHeader = ((0, fs_1.readFileSync)(process.env.WGHeaderPath || "")).toString();
         this.wgConfPath = process.env.WGConfPath || "";
-        const date = new Date().toISOString();
-        this._createNewPeer({
-            peerName: "test2",
-            PublicKey: "randKey1",
-            PresharedKey: "randKey2",
-            AllowedIPs: "1.1.1.3",
-            shelflife: date
-        });
-        this._getPeersByFilter({ peerName: "test" }).then(data => console.log(data));
-        this._removePeer("test");
-        this.regenWgConf();
-        console.log(this._genPeerConfigObject());
+        this.wgServerIp = process.env.WGServerIp || "";
+        this.wgServerPort = Number(process.env.WGServerPort) || 0;
+        this.wgPublicKey = process.env.WGPublicKey || "";
+        this.wgPrivateKey = process.env.WGPrivateKey || "";
+        this.removePeer(1);
+        this.getNewPeerId().then(data => console.log(data));
+        this.getAllPeers().then(data => console.log(data));
     }
-    async _getAllPeers() {
+    async getAllPeers() {
         return await this.prisma.peer.findMany().catch(e => []);
     }
-    async _createNewPeer(peerData) {
-        await this.prisma.peer.create({ data: peerData }).catch(e => e.data);
+    async createNewPeer(peer) {
+        await this.prisma.peer.create({ data: peer }).catch(e => e.data);
     }
-    async _getPeersByFilter(filter) {
+    async getPeersByFilter(filter) {
         return await this.prisma.peer.findMany({ where: filter }).catch(e => []);
     }
-    async _updatePeer(updatePeerData) {
-        await this.prisma.peer.update({ where: { peerName: updatePeerData.id }, data: updatePeerData });
+    async updatePeer(updatePeerData) {
+        await this.prisma.peer.update({ where: { id: updatePeerData.id }, data: updatePeerData });
     }
-    async _removePeer(id) {
-        await this.prisma.peer.delete({ where: { peerName: id } }).catch(e => null);
+    async removePeer(id) {
+        await this.prisma.peer.delete({ where: { id } }).catch(e => null);
     }
     async regenWgConf() {
-        const activePeers = await this._getPeersByFilter({ banned: false });
+        const activePeers = await this.getPeersByFilter({ banned: false });
         let allPeers = this.wgConfHeader;
         activePeers.forEach(peer => {
             allPeers += `\n\n[Peer]\nPublicKey=${peer.PublicKey}\nPresharedKey=${peer.PresharedKey}\nAllowedIPs=${peer.AllowedIPs}`;
         });
         (0, fs_1.writeFileSync)(this.wgConfPath, allPeers);
     }
-    _genPeerConfigObject() {
+    genPeerKeys() {
         let commandForGenKeys = 'wg genkey | tee private.key | wg pubkey > public.key && cat private.key && cat public.key && wg genpsk && rm public.key private.key';
         let output = (0, child_process_1.execSync)(commandForGenKeys).toString();
         return {
@@ -66,6 +65,28 @@ let WgcoreService = class WgcoreService {
             PublicKey: output.split("\n")[1],
             PresharedKey: output.split("\n")[2]
         };
+    }
+    genPeerConfig(peer) {
+        let peerString = "[Peer]";
+        peerString += "\nPublicKey=" + peer.PublicKey;
+        peerString += "\nPresharedKey=" + peer.PresharedKey;
+        peerString += "\nAllowedIPs=" + peer.AllowedIPs;
+        return peerString;
+    }
+    genPeerConnectConfig(peer) {
+        let clientConfigString = "[Interface]";
+        clientConfigString += "\nPrivateKey=" + peer.PrivateKey;
+        clientConfigString += "\nAddress=" + peer.AllowedIPs;
+        clientConfigString += "\nDNS=1.1.1.1,8.8.8.8";
+        clientConfigString += "\n\n[Peer]";
+        clientConfigString += "\nPublicKey=" + this.wgPublicKey;
+        clientConfigString += "\nPresharedKey=" + peer.PresharedKey;
+        clientConfigString += "\nEndpoint=" + this.wgServerIp + ":" + this.wgServerPort;
+        clientConfigString += "\nAllowedIPs=0.0.0.0/0,::/0";
+        return clientConfigString;
+    }
+    async getNewPeerId() {
+        return await this.prisma.peer.findMany({ orderBy: { id: "asc" }, select: { id: true }, take: -1 }).then(data => (data[0]?.id | 0) + 1);
     }
 };
 exports.WgcoreService = WgcoreService;
