@@ -14,6 +14,17 @@ const child_process_1 = require("child_process");
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const fs_1 = require("fs");
+class CustomError extends Error {
+    msg;
+    statusCode;
+    defaultError;
+    constructor(statusCode, msg, e, ...args) {
+        super();
+        this.msg = msg;
+        this.statusCode = statusCode;
+        this.defaultError = e;
+    }
+}
 let WgcoreService = class WgcoreService {
     prisma;
     wgConfHeader;
@@ -27,37 +38,38 @@ let WgcoreService = class WgcoreService {
         this.wgConfHeader = ((0, fs_1.readFileSync)(process.env.WGHeaderPath || "")).toString();
         this.wgConfPath = process.env.WGConfPath || "";
         this.wgServerIp = process.env.WGServerIp || "";
-        this.wgServerPort = Number(process.env.WGServerPort) || 0;
+        this.wgServerPort = process.env.WGServerPort || 0;
         this.wgPublicKey = process.env.WGPublicKey || "";
         this.wgPrivateKey = process.env.WGPrivateKey || "";
-        this.removePeer(3);
-        this.create("test2", (new Date())).then(data => console.log(data));
+        this.getAllPeers().then(data => console.log(data)).catch(e => console.log(e.msg));
+        this.create("test45dfgasasd", (new Date())).then(data => console.log("Created")).catch(e => console.log(e.msg));
     }
-    async getAllPeers() {
-        return await this.prisma.peer.findMany().catch(e => []);
+    async _reloadWGConf() {
+        (0, child_process_1.execSync)("service wg-quick@wg0 reload");
     }
-    async createNewPeer(peer) {
-        await this.prisma.peer.create({ data: peer }).catch(e => e.data);
-        return await this.getPeersByFilter({ peerName: peer.peerName }).then(data => data[0]);
-    }
-    async getPeersByFilter(filter) {
-        return await this.prisma.peer.findMany({ where: filter }).catch(e => []);
-    }
-    async updatePeer(updatePeerData) {
-        await this.prisma.peer.update({ where: { id: updatePeerData.id }, data: updatePeerData });
-    }
-    async removePeer(id) {
-        await this.prisma.peer.delete({ where: { id } }).catch(e => null);
-    }
-    async regenWgConf() {
-        const activePeers = await this.getPeersByFilter({ banned: false });
+    async _regenWgConf() {
+        const activePeers = await this.getPeersByFilter({
+            banned: false
+        });
         let allPeers = this.wgConfHeader;
         activePeers.forEach(peer => {
             allPeers += `\n\n[Peer]\nPublicKey=${peer.PublicKey}\nPresharedKey=${peer.PresharedKey}\nAllowedIPs=${peer.AllowedIPs}`;
         });
         (0, fs_1.writeFileSync)(this.wgConfPath, allPeers);
+        this._reloadWGConf();
     }
-    async genPeerKeys() {
+    async _getNewPeerId() {
+        return await this.prisma.peer.findMany({
+            orderBy: {
+                id: "asc"
+            },
+            select: {
+                id: true
+            },
+            take: -1
+        }).then(data => (data[0]?.id | 0) + 2).catch(e => { throw new CustomError(500, "Ошибка VPN сервера.", e); });
+    }
+    async _genPeerKeys() {
         let commandForGenKeys = 'wg genkey | tee private.key | wg pubkey > public.key && cat private.key && cat public.key && wg genpsk && rm public.key private.key';
         let output = (0, child_process_1.execSync)(commandForGenKeys).toString();
         return {
@@ -66,14 +78,14 @@ let WgcoreService = class WgcoreService {
             PresharedKey: output.split("\n")[2]
         };
     }
-    async genPeerConfig(peer) {
+    async _genPeerConfig(peer) {
         let peerString = "[Peer]";
         peerString += "\nPublicKey=" + peer.PublicKey;
         peerString += "\nPresharedKey=" + peer.PresharedKey;
         peerString += "\nAllowedIPs=" + peer.AllowedIPs;
         return peerString;
     }
-    async genPeerConnectConfig(peer) {
+    async _genPeerConnectConfig(peer) {
         let clientConfigString = "[Interface]";
         clientConfigString += "\nPrivateKey=" + peer.PrivateKey;
         clientConfigString += "\nAddress=" + peer.AllowedIPs;
@@ -85,23 +97,49 @@ let WgcoreService = class WgcoreService {
         clientConfigString += "\nAllowedIPs=0.0.0.0/0,::/0";
         return clientConfigString;
     }
-    async getNewPeerId() {
-        return await this.prisma.peer.findMany({ orderBy: { id: "asc" }, select: { id: true }, take: -1 }).then(data => (data[0]?.id | 1) + 1);
+    async getAllPeers() {
+        return await this.prisma.peer.findMany().catch((e) => { throw new CustomError(500, "Ошибка VPN сервера.", e); });
+    }
+    async createNewPeer(peer) {
+        await this.prisma.peer.create({
+            data: peer
+        }).catch(e => { throw new CustomError(406, "Имя пользователя занято.", e); });
+        return await this.getPeersByFilter({
+            peerName: peer.peerName
+        }).then(data => data[0]);
+    }
+    async getPeersByFilter(filter) {
+        return await this.prisma.peer.findMany({
+            where: filter
+        }).catch(e => []);
+    }
+    async updatePeer(updatePeerData) {
+        await this.prisma.peer.update({
+            where: {
+                id: updatePeerData.id
+            },
+            data: updatePeerData
+        }).catch(e => { throw new CustomError(404, "Пользователь для изменения не найден.", e); });
+    }
+    async removePeer(id) {
+        await this.prisma.peer.delete({
+            where: {
+                id
+            }
+        }).catch(e => { throw new CustomError(404, "Пользователь для удаления не найден."); });
     }
     async create(name, shelflife) {
-        const id = await this.getNewPeerId();
-        const peerKeys = await this.genPeerKeys();
+        const id = await this._getNewPeerId();
+        const peerKeys = await this._genPeerKeys();
         const peerData = {
             peerName: name,
             shelflife: shelflife,
-            ...peerKeys,
-            AllowedIPs: `10.66.66.${id}/32,fd42:42:42::${id}/128`
+            AllowedIPs: `10.66.66.${id}/32,fd42:42:42::${id}/128`,
+            ...peerKeys
         };
         const newPeer = await this.createNewPeer(peerData);
-        console.log(newPeer);
-        const connectConfigString = await this.genPeerConnectConfig(newPeer);
-        const newConfig = await this.genPeerConfig(newPeer);
-        console.log(`${connectConfigString}\n\n${newConfig}`);
+        await this._regenWgConf();
+        return await this._genPeerConnectConfig(newPeer);
     }
 };
 exports.WgcoreService = WgcoreService;
