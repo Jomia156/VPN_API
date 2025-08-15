@@ -20,7 +20,17 @@ export declare class WgcoreService {
         shelflife: Date;
         banned: boolean;
     }[] | never[]>;
-    createNewPeer(peer: CreatePeerDTO): Promise<void>;
+    createNewPeer(peer: CreatePeerDTO): Promise<{
+        id: number;
+        peerName: string;
+        PrivateKey: string;
+        PublicKey: string;
+        PresharedKey: string;
+        AllowedIPs: string;
+        created_date: Date;
+        shelflife: Date;
+        banned: boolean;
+    }>;
     getPeersByFilter(filter: FilterDTO): Promise<{
         id: number;
         peerName: string;
@@ -35,12 +45,13 @@ export declare class WgcoreService {
     updatePeer(updatePeerData: UpdatePeerDTO): Promise<void>;
     removePeer(id: any): Promise<void>;
     regenWgConf(): Promise<void>;
-    genPeerKeys(): {
+    genPeerKeys(): Promise<{
         PrivateKey: string;
         PublicKey: string;
         PresharedKey: string;
-    };
-    genPeerConfig(peer: PeerDTO): string;
-    genPeerConnectConfig(peer: PeerDTO): string;
+    }>;
+    genPeerConfig(peer: PeerDTO): Promise<string>;
+    genPeerConnectConfig(peer: PeerDTO): Promise<string>;
     getNewPeerId(): Promise<number>;
+    create(name: any, shelflife: any): Promise<void>;
 }

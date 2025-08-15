@@ -30,15 +30,15 @@ let WgcoreService = class WgcoreService {
         this.wgServerPort = Number(process.env.WGServerPort) || 0;
         this.wgPublicKey = process.env.WGPublicKey || "";
         this.wgPrivateKey = process.env.WGPrivateKey || "";
-        this.removePeer(1);
-        this.getNewPeerId().then(data => console.log(data));
-        this.getAllPeers().then(data => console.log(data));
+        this.removePeer(3);
+        this.create("test2", (new Date())).then(data => console.log(data));
     }
     async getAllPeers() {
         return await this.prisma.peer.findMany().catch(e => []);
     }
     async createNewPeer(peer) {
         await this.prisma.peer.create({ data: peer }).catch(e => e.data);
+        return await this.getPeersByFilter({ peerName: peer.peerName }).then(data => data[0]);
     }
     async getPeersByFilter(filter) {
         return await this.prisma.peer.findMany({ where: filter }).catch(e => []);
@@ -57,7 +57,7 @@ let WgcoreService = class WgcoreService {
         });
         (0, fs_1.writeFileSync)(this.wgConfPath, allPeers);
     }
-    genPeerKeys() {
+    async genPeerKeys() {
         let commandForGenKeys = 'wg genkey | tee private.key | wg pubkey > public.key && cat private.key && cat public.key && wg genpsk && rm public.key private.key';
         let output = (0, child_process_1.execSync)(commandForGenKeys).toString();
         return {
@@ -66,14 +66,14 @@ let WgcoreService = class WgcoreService {
             PresharedKey: output.split("\n")[2]
         };
     }
-    genPeerConfig(peer) {
+    async genPeerConfig(peer) {
         let peerString = "[Peer]";
         peerString += "\nPublicKey=" + peer.PublicKey;
         peerString += "\nPresharedKey=" + peer.PresharedKey;
         peerString += "\nAllowedIPs=" + peer.AllowedIPs;
         return peerString;
     }
-    genPeerConnectConfig(peer) {
+    async genPeerConnectConfig(peer) {
         let clientConfigString = "[Interface]";
         clientConfigString += "\nPrivateKey=" + peer.PrivateKey;
         clientConfigString += "\nAddress=" + peer.AllowedIPs;
@@ -86,7 +86,22 @@ let WgcoreService = class WgcoreService {
         return clientConfigString;
     }
     async getNewPeerId() {
-        return await this.prisma.peer.findMany({ orderBy: { id: "asc" }, select: { id: true }, take: -1 }).then(data => (data[0]?.id | 0) + 1);
+        return await this.prisma.peer.findMany({ orderBy: { id: "asc" }, select: { id: true }, take: -1 }).then(data => (data[0]?.id | 1) + 1);
+    }
+    async create(name, shelflife) {
+        const id = await this.getNewPeerId();
+        const peerKeys = await this.genPeerKeys();
+        const peerData = {
+            peerName: name,
+            shelflife: shelflife,
+            ...peerKeys,
+            AllowedIPs: `10.66.66.${id}/32,fd42:42:42::${id}/128`
+        };
+        const newPeer = await this.createNewPeer(peerData);
+        console.log(newPeer);
+        const connectConfigString = await this.genPeerConnectConfig(newPeer);
+        const newConfig = await this.genPeerConfig(newPeer);
+        console.log(`${connectConfigString}\n\n${newConfig}`);
     }
 };
 exports.WgcoreService = WgcoreService;

@@ -22,9 +22,11 @@ export class WgcoreService {
     this.wgPrivateKey = process.env.WGPrivateKey || ""
 
     
-    this.removePeer(1)
-    this.getNewPeerId().then(data=>console.log(data))
-    this.getAllPeers().then(data=>console.log(data))
+    this.removePeer(3)
+    //this.getNewPeerId().then(data=>console.log(data))
+    //this.getAllPeers().then(data=>console.log(data))
+    //this.genPeerConnectConfig({peerName:"test", id:1, PrivateKey:"", PublicKey:"", PresharedKey:"", AllowedIPs:"", created_date:"", shelflife:"",banned:false}).then(data=>console.log(data))
+    this.create("test2", (new Date())).then(data=>console.log(data))
 	}
 
 	async getAllPeers() {
@@ -33,6 +35,7 @@ export class WgcoreService {
 
 	async createNewPeer(peer:CreatePeerDTO) {
 		await this.prisma.peer.create({data:peer}).catch(e=>e.data)
+    return await this.getPeersByFilter({peerName:peer.peerName}).then(data=>data[0])
 	}
 
   async getPeersByFilter(filter:FilterDTO) {
@@ -57,7 +60,7 @@ export class WgcoreService {
     writeFileSync(this.wgConfPath, allPeers)
   }
 
-  genPeerKeys() {
+  async genPeerKeys() {
     let commandForGenKeys = 'wg genkey | tee private.key | wg pubkey > public.key && cat private.key && cat public.key && wg genpsk && rm public.key private.key' 
     let output = execSync(commandForGenKeys).toString()
     return { 
@@ -67,7 +70,7 @@ export class WgcoreService {
     }
    }
 
-   genPeerConfig(peer:PeerDTO) {
+   async genPeerConfig(peer:PeerDTO) {
     let peerString = "[Peer]"
     peerString += "\nPublicKey="+peer.PublicKey
     peerString += "\nPresharedKey="+peer.PresharedKey
@@ -75,7 +78,7 @@ export class WgcoreService {
     return peerString 
    }
 
-   genPeerConnectConfig(peer:PeerDTO) {
+   async genPeerConnectConfig(peer:PeerDTO) {
     let clientConfigString = "[Interface]"
     clientConfigString += "\nPrivateKey="+peer.PrivateKey
     clientConfigString += "\nAddress="+peer.AllowedIPs
@@ -89,8 +92,27 @@ export class WgcoreService {
    }
 
    async getNewPeerId() {
-    return await this.prisma.peer.findMany({orderBy:{id:"asc"}, select:{id:true}, take:-1}).then(data=> (data[0]?.id | 0)+1)
+    return await this.prisma.peer.findMany({orderBy:{id:"asc"}, select:{id:true}, take:-1}).then(data=> (data[0]?.id | 1)+1)
    }
 
+   async create(name, shelflife) {
+    const id = await this.getNewPeerId()
+    const peerKeys = await this.genPeerKeys()
+    const peerData:CreatePeerDTO = {
+      peerName:name,
+      shelflife:shelflife,
+      ...peerKeys,
+      AllowedIPs:`10.66.66.${id}/32,fd42:42:42::${id}/128`
+    }
+
+    const newPeer = await this.createNewPeer(peerData)
+    console.log(newPeer)
+
+    
+    const connectConfigString = await this.genPeerConnectConfig(newPeer)
+    const newConfig = await this.genPeerConfig(newPeer)
+
+    console.log(`${connectConfigString}\n\n${newConfig}`)
+   }
 }
  

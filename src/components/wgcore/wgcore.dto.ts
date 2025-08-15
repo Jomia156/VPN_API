@@ -4,7 +4,7 @@ export type CreatePeerDTO = {
       PublicKey:string
       PresharedKey:string
       AllowedIPs:string 
-      shelflife:string
+      shelflife:Date
 }
 
 export type FilterDTO = {
@@ -27,7 +27,7 @@ export type PeerDTO = {
   PublicKey:string,
   PresharedKey:string,
   AllowedIPs:string,
-  created_date:string,
-  shelflife:string,
+  created_date:Date,
+  shelflife:Date,
   banned:boolean 
 }
