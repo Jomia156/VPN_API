@@ -4,6 +4,7 @@ import {PrismaModule} from "../prisma/prisma.module";
 
 @Module({
   providers: [WgcoreService],
-  imports: [PrismaModule]
+  imports: [PrismaModule],
+  exports: [WgcoreService]
 })
 export class WgcoreModule {}

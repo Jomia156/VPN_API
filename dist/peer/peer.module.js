@@ -10,13 +10,15 @@ exports.PeerModule = void 0;
 const common_1 = require("@nestjs/common");
 const peer_service_1 = require("./peer.service");
 const peer_controller_1 = require("./peer.controller");
+const wgcore_module_1 = require("../components/wgcore/wgcore.module");
 let PeerModule = class PeerModule {
 };
 exports.PeerModule = PeerModule;
 exports.PeerModule = PeerModule = __decorate([
     (0, common_1.Module)({
         providers: [peer_service_1.PeerService],
-        controllers: [peer_controller_1.PeerController]
+        controllers: [peer_controller_1.PeerController],
+        imports: [wgcore_module_1.WgcoreModule]
     })
 ], PeerModule);
 //# sourceMappingURL=peer.module.js.map

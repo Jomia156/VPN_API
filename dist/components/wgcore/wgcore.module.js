@@ -16,7 +16,8 @@ exports.WgcoreModule = WgcoreModule;
 exports.WgcoreModule = WgcoreModule = __decorate([
     (0, common_1.Module)({
         providers: [wgcore_service_1.WgcoreService],
-        imports: [prisma_module_1.PrismaModule]
+        imports: [prisma_module_1.PrismaModule],
+        exports: [wgcore_service_1.WgcoreService]
     })
 ], WgcoreModule);
 //# sourceMappingURL=wgcore.module.js.map
