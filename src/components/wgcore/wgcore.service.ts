@@ -3,19 +3,9 @@ import {Injectable} from '@nestjs/common';
 import {CreatePeerDTO,FilterDTO,UpdatePeerDTO,PeerDTO} from './wgcore.dto'
 import {PrismaService} from "../prisma/prisma.service"
 import {readFileSync,writeFileSync} from "fs"
- 
-class CustomError extends Error {
-    public msg: string
-    public statusCode: number
-    public defaultError: Error
+import {CustomError} from "../error-handler/custom-error.class"
 
-    constructor (statusCode: number, msg: string, e: Error, ...args) {
-        super()
-        this.msg = msg
-        this.statusCode = statusCode
-        this.defaultError = e
-    }
-}
+
 
 @Injectable()
 export class WgcoreService {
@@ -35,7 +25,7 @@ export class WgcoreService {
         this.wgPrivateKey = process.env.WGPrivateKey || ""
      
         this.getAllPeers().then(data=>console.log(data)).catch(e=>console.log(e.msg))
-        this.create("test45dfgasasd", (new Date())).then(data=>console.log("Created")).catch(e=>console.log(e.msg))
+        this.createPeer("test4", (new Date())).then(data=>console.log(data)).catch(e=>console.log(e.msg))
     }
     
     async _reloadWGConf() {
@@ -103,15 +93,6 @@ export class WgcoreService {
         return await this.prisma.peer.findMany().catch((e)=>throw new CustomError(500, "Ошибка VPN сервера.", e))
     }
     
-    async createNewPeer(peer: CreatePeerDTO) {
-        await this.prisma.peer.create({
-            data: peer
-        }).catch(e=>throw new CustomError(406, "Имя пользователя занято.", e))
-        return await this.getPeersByFilter({
-            peerName: peer.peerName
-        }).then(data=>data[0])
-    }
-    
     async getPeersByFilter(filter: FilterDTO) {
         return await this.prisma.peer.findMany({
             where: filter
@@ -134,7 +115,11 @@ export class WgcoreService {
             }}).catch(e=>throw new CustomError(404, "Пользователь для удаления не найден."))
     }
     
-    async create(name,shelflife) {
+    async createPeer(name,shelflife) {
+        const created = (await this.getPeersByFilter({peerName:name})).length
+        if (created) {
+            throw new CustomError(406, "Пользователь с таким именем уже существует.", {})    
+        }
         const id = await this._getNewPeerId()
         const peerKeys = await this._genPeerKeys()
         const peerData: CreatePeerDTO = {
@@ -143,10 +128,14 @@ export class WgcoreService {
             AllowedIPs: `10.66.66.${id}/32,fd42:42:42::${id}/128`,
             ...peerKeys
         }
-        const newPeer = await this.createNewPeer(peerData)
+        await this.prisma.peer.create({
+            data: peerData
+        }).catch(e=>throw new CustomError(500, "Ошибка VPN сервера.", e))
     
         await this._regenWgConf()
-        return await this._genPeerConnectConfig(newPeer)
+        return await this._genPeerConnectConfig(peerData)
     }
 
 }
+
+
