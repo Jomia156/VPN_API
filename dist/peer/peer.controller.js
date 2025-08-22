@@ -13,6 +13,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PeerController = void 0;
 const common_1 = require("@nestjs/common");
 const wgcore_service_1 = require("../components/wgcore/wgcore.service");
+function testDec() {
+    return function (target, name, descriptor) {
+        console.log(target.constructor.name, name);
+        let origin = descriptor.value;
+        descriptor.value = async function () {
+            let result = await origin.apply(this, arguments);
+            console.log(result);
+            return result;
+        };
+        return descriptor;
+    };
+}
 let PeerController = class PeerController {
     wgcoreService;
     constructor(wgcoreService) {
@@ -25,6 +37,7 @@ let PeerController = class PeerController {
 exports.PeerController = PeerController;
 __decorate([
     (0, common_1.Get)("/all"),
+    testDec(this),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, typeof (_a = typeof common_1.Responce !== "undefined" && common_1.Responce) === "function" ? _a : Object]),
     __metadata("design:returntype", Promise)

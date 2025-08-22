@@ -31,8 +31,6 @@ let WgcoreService = class WgcoreService {
         this.wgServerPort = process.env.WGServerPort || 0;
         this.wgPublicKey = process.env.WGPublicKey || "";
         this.wgPrivateKey = process.env.WGPrivateKey || "";
-        this.getAllPeers().then(data => console.log(data)).catch(e => console.log(e.msg));
-        this.createPeer("test4", (new Date())).then(data => console.log(data)).catch(e => console.log(e.msg));
     }
     async _reloadWGConf() {
         (0, child_process_1.execSync)("service wg-quick@wg0 reload");
