@@ -1,6 +1,6 @@
 import {execSync} from 'child_process';
 import {Injectable} from '@nestjs/common';
-import {CreatePeerDTO,FilterDTO,UpdatePeerDTO,PeerDTO} from './wgcore.dto'
+import {FilterDTO,UpdatePeerDTO,PeerDTO} from './wgcore.dto'
 import {PrismaService} from "../prisma/prisma.service"
 import {readFileSync,writeFileSync} from "fs"
 import {CustomError} from "../error-handler/custom-error.class"
@@ -16,7 +16,7 @@ export class WgcoreService {
     private wgPublicKey: string
     private wgPrivateKey: string
 
-    constructor(private prisma: PrismaService) {
+    constructor() {
         this.wgConfHeader = (readFileSync(process.env.WGHeaderPath || "")).toString()
         this.wgConfPath = process.env.WGConfPath || ""
         this.wgServerIp = process.env.WGServerIp || ""
@@ -25,7 +25,7 @@ export class WgcoreService {
         this.wgPrivateKey = process.env.WGPrivateKey || ""
     }
     
-    async _reloadWGConf() {
+    async _reloadWGConf():Promise<void> {
         execSync("service wg-quick@wg0 reload")
     }
     
@@ -73,3 +73,4 @@ export class WgcoreService {
     }
 
 }
+

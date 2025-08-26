@@ -1,12 +1,3 @@
-export type CreatePeerDTO = {
-      peerName:string
-      PrivateKey:string,
-      PublicKey:string
-      PresharedKey:string
-      AllowedIPs:string 
-      shelflife:Date
-}
-
 export type FilterDTO = {
   AllowedIps?:string,
   peerName?:string
@@ -21,13 +12,14 @@ export type UpdatePeerDTO = {
 }
 
 export type PeerDTO = {
-  id:number,
+  id?:number,
   peerName:string,
   PrivateKey:string,
   PublicKey:string,
   PresharedKey:string,
   AllowedIPs:string,
-  created_date:Date,
+  created_date?:Date,
   shelflife:Date,
-  banned:boolean 
+  banned?:boolean 
 }
+
