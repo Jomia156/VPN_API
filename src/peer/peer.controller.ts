@@ -1,19 +1,39 @@
 import { Controller, Get, Request, Responce } from '@nestjs/common';
 import {WgcoreService} from "../components/wgcore/wgcore.service"
+import {PeerService} from "./peer.service"
+import {CustomError} from "../components/error-handler/custom-error.class"
 
-
-function testDec() {
+function errorHandler() {
   
   return function (target ,name, descriptor)  {
-    console.log(target.constructor.name,name)
+    
 
     let origin = descriptor.value
     descriptor.value = async function()  {
-        let result = await origin.apply(this, arguments)
-        console.log(result)
-        return result
+        //return await origin.apply(this, arguments).then((data)=>{{data}}).catch((e)=> {{status:e.status, description:e.msg}})
+        
+        try {
+            const result = await origin.apply(this, arguments)
+            return {data:result}
+        }
+        catch(e) {
+            if (e instanceof CustomError) {
+                console.log(target.constructor.name,name, "->>>", e.msg)
+                return {
+                    status:e.status,
+                    description:e.msg 
+                }
+            }
+            console.log(target.constructor.name,name, "->>>", e)
+            return {
+                status:500,
+                description:"Ошибка VPN сервера."
+            }
+        }
+        
+        
     }
-    return descriptor
+    return descriptor   
     
   }
 }
@@ -21,12 +41,12 @@ function testDec() {
 @Controller('peer')
 export class PeerController {
 
-  constructor(private wgcoreService:WgcoreService){}
+  constructor(private peerService:PeerService){}
 
   
   @Get("/all")
-  @testDec(this)
+  @errorHandler()
   async getAll(this:this, req:Request, res:Responce) {
-    return await this.wgcoreService.getAllPeers()
+    return await this.peerService.getAllPeers()
   }
 }

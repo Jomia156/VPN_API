@@ -14,7 +14,6 @@ const child_process_1 = require("child_process");
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const fs_1 = require("fs");
-const custom_error_class_1 = require("../error-handler/custom-error.class");
 let WgcoreService = class WgcoreService {
     prisma;
     wgConfHeader;
@@ -28,34 +27,20 @@ let WgcoreService = class WgcoreService {
         this.wgConfHeader = ((0, fs_1.readFileSync)(process.env.WGHeaderPath || "")).toString();
         this.wgConfPath = process.env.WGConfPath || "";
         this.wgServerIp = process.env.WGServerIp || "";
-        this.wgServerPort = process.env.WGServerPort || 0;
+        this.wgServerPort = process.env.WGServerPort || "";
         this.wgPublicKey = process.env.WGPublicKey || "";
         this.wgPrivateKey = process.env.WGPrivateKey || "";
     }
     async _reloadWGConf() {
         (0, child_process_1.execSync)("service wg-quick@wg0 reload");
     }
-    async _regenWgConf() {
-        const activePeers = await this.getPeersByFilter({
-            banned: false
-        });
-        let allPeers = this.wgConfHeader;
+    async _regenWgConf(activePeers) {
+        let config = this.wgConfHeader;
         activePeers.forEach(peer => {
-            allPeers += `\n\n[Peer]\nPublicKey=${peer.PublicKey}\nPresharedKey=${peer.PresharedKey}\nAllowedIPs=${peer.AllowedIPs}`;
+            config += `\n\n[Peer]\nPublicKey=${peer.PublicKey}\nPresharedKey=${peer.PresharedKey}\nAllowedIPs=${peer.AllowedIPs}`;
         });
-        (0, fs_1.writeFileSync)(this.wgConfPath, allPeers);
+        (0, fs_1.writeFileSync)(this.wgConfPath, config);
         this._reloadWGConf();
-    }
-    async _getNewPeerId() {
-        return await this.prisma.peer.findMany({
-            orderBy: {
-                id: "asc"
-            },
-            select: {
-                id: true
-            },
-            take: -1
-        }).then(data => (data[0]?.id | 0) + 2).catch(e => { throw new custom_error_class_1.CustomError(500, "Ошибка VPN сервера.", e); });
     }
     async _genPeerKeys() {
         let commandForGenKeys = 'wg genkey | tee private.key | wg pubkey > public.key && cat private.key && cat public.key && wg genpsk && rm public.key private.key';
@@ -84,48 +69,6 @@ let WgcoreService = class WgcoreService {
         clientConfigString += "\nEndpoint=" + this.wgServerIp + ":" + this.wgServerPort;
         clientConfigString += "\nAllowedIPs=0.0.0.0/0,::/0";
         return clientConfigString;
-    }
-    async getAllPeers() {
-        return await this.prisma.peer.findMany().catch((e) => { throw new custom_error_class_1.CustomError(500, "Ошибка VPN сервера.", e); });
-    }
-    async getPeersByFilter(filter) {
-        return await this.prisma.peer.findMany({
-            where: filter
-        }).catch(e => []);
-    }
-    async updatePeer(updatePeerData) {
-        await this.prisma.peer.update({
-            where: {
-                id: updatePeerData.id
-            },
-            data: updatePeerData
-        }).catch(e => { throw new custom_error_class_1.CustomError(404, "Пользователь для изменения не найден.", e); });
-    }
-    async removePeer(id) {
-        await this.prisma.peer.delete({
-            where: {
-                id
-            }
-        }).catch(e => { throw new custom_error_class_1.CustomError(404, "Пользователь для удаления не найден."); });
-    }
-    async createPeer(name, shelflife) {
-        const created = (await this.getPeersByFilter({ peerName: name })).length;
-        if (created) {
-            throw new custom_error_class_1.CustomError(406, "Пользователь с таким именем уже существует.", {});
-        }
-        const id = await this._getNewPeerId();
-        const peerKeys = await this._genPeerKeys();
-        const peerData = {
-            peerName: name,
-            shelflife: shelflife,
-            AllowedIPs: `10.66.66.${id}/32,fd42:42:42::${id}/128`,
-            ...peerKeys
-        };
-        await this.prisma.peer.create({
-            data: peerData
-        }).catch(e => { throw new custom_error_class_1.CustomError(500, "Ошибка VPN сервера.", e); });
-        await this._regenWgConf();
-        return await this._genPeerConnectConfig(peerData);
     }
 };
 exports.WgcoreService = WgcoreService;
