@@ -1,17 +1,16 @@
-import { Responce } from '@nestjs/common';
 import { PeerService } from "./peer.service";
+import type { FilterDTO, UpdatePeerDTO, PeerDTO } from '../components/wgcore/wgcore.dto';
 export declare class PeerController {
     private peerService;
     constructor(peerService: PeerService);
-    getAll(this: this, req: Request, res: Responce): Promise<{
-        id: number;
+    getAll(req: Request, res: Response): Promise<PeerDTO[]>;
+    getByFilter(req: Request, res: Response, filter: FilterDTO): Promise<PeerDTO[]>;
+    getById(req: Request, res: Response, params: {
+        id: string;
+    }): Promise<void>;
+    create(createPeerDTO: {
         peerName: string;
-        PrivateKey: string;
-        PublicKey: string;
-        PresharedKey: string;
-        AllowedIPs: string;
-        created_date: Date;
-        shelflife: Date;
-        banned: boolean;
-    }[]>;
+        shelflife: string;
+    }, req: Request, res: Response): Promise<string>;
+    update(updatePeerDTO: UpdatePeerDTO, req: Request, res: Response): Promise<void>;
 }

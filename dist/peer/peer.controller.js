@@ -8,38 +8,13 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a;
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PeerController = void 0;
 const common_1 = require("@nestjs/common");
 const peer_service_1 = require("./peer.service");
-const custom_error_class_1 = require("../components/error-handler/custom-error.class");
-function errorHandler() {
-    return function (target, name, descriptor) {
-        let origin = descriptor.value;
-        descriptor.value = async function () {
-            try {
-                const result = await origin.apply(this, arguments);
-                return { data: result };
-            }
-            catch (e) {
-                if (e instanceof custom_error_class_1.CustomError) {
-                    console.log(target.constructor.name, name, "->>>", e.msg);
-                    return {
-                        status: e.status,
-                        description: e.msg
-                    };
-                }
-                console.log(target.constructor.name, name, "->>>", e);
-                return {
-                    status: 500,
-                    description: "Ошибка VPN сервера."
-                };
-            }
-        };
-        return descriptor;
-    };
-}
 let PeerController = class PeerController {
     peerService;
     constructor(peerService) {
@@ -48,15 +23,64 @@ let PeerController = class PeerController {
     async getAll(req, res) {
         return await this.peerService.getAllPeers();
     }
+    async getByFilter(req, res, filter) {
+        return await this.peerService.getPeersByFilter({ ...filter });
+    }
+    async getById(req, res, params) {
+        return await this.peerService.removePeer(params.id);
+    }
+    async create(createPeerDTO, req, res) {
+        return await this.peerService.create(createPeerDTO.peerName, createPeerDTO.shelflife);
+    }
+    async update(updatePeerDTO, req, res) {
+        return await this.peerService.updatePeer(updatePeerDTO);
+    }
 };
 exports.PeerController = PeerController;
 __decorate([
     (0, common_1.Get)("/all"),
-    errorHandler(),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, typeof (_a = typeof common_1.Responce !== "undefined" && common_1.Responce) === "function" ? _a : Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], PeerController.prototype, "getAll", null);
+__decorate([
+    (0, common_1.Get)('/filter'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Res)()),
+    __param(2, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, Object]),
+    __metadata("design:returntype", Promise)
+], PeerController.prototype, "getByFilter", null);
+__decorate([
+    (0, common_1.Delete)('/:id'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Res)()),
+    __param(2, (0, common_1.Param)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, Object]),
+    __metadata("design:returntype", Promise)
+], PeerController.prototype, "getById", null);
+__decorate([
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __param(2, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, Object]),
+    __metadata("design:returntype", Promise)
+], PeerController.prototype, "create", null);
+__decorate([
+    (0, common_1.Post)("update"),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __param(2, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, Object]),
+    __metadata("design:returntype", Promise)
+], PeerController.prototype, "update", null);
 exports.PeerController = PeerController = __decorate([
     (0, common_1.Controller)('peer'),
     __metadata("design:paramtypes", [peer_service_1.PeerService])

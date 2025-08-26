@@ -20,7 +20,6 @@ let PeerService = class PeerService {
     constructor(prisma, wgcore) {
         this.prisma = prisma;
         this.wgcore = wgcore;
-        this.create("sdsfs", new Date().toISOString()).then(data => console.log(data)).catch(e => console.log(e));
     }
     async _getNewPeerId() {
         return await this.prisma.peer.findMany({
@@ -31,15 +30,17 @@ let PeerService = class PeerService {
                 id: true
             },
             take: -1
-        }).then(data => (data[0]?.id | 0) + 2).catch(e => { throw new custom_error_class_1.CustomError(500, "Ошибка VPN сервера.", e); });
+        }).then(data => (data[0]?.id | 0) + 2).catch((e) => { throw new custom_error_class_1.CustomError(500, "Ошибка VPN сервера.", e); });
     }
     async getAllPeers() {
         return await this.prisma.peer.findMany().catch((e) => { throw new custom_error_class_1.CustomError(500, "Ошибка VPN сервера.", e); });
     }
     async getPeersByFilter(filter) {
-        return await this.prisma.peer.findMany({
+        let result = [];
+        await this.prisma.peer.findMany({
             where: filter
-        }).catch(e => []);
+        }).then((data) => { result = data; }).catch((e) => { []; });
+        return result;
     }
     async updatePeer(updatePeerData) {
         await this.prisma.peer.update({
@@ -47,14 +48,14 @@ let PeerService = class PeerService {
                 id: updatePeerData.id
             },
             data: updatePeerData
-        }).catch(e => { throw new custom_error_class_1.CustomError(404, "Пользователь для изменения не найден.", e); });
+        }).catch((e) => { throw new custom_error_class_1.CustomError(404, "Пользователь для изменения не найден.", e); });
     }
     async removePeer(id) {
         await this.prisma.peer.delete({
             where: {
                 id
             }
-        }).catch(e => { throw new custom_error_class_1.CustomError(404, "Пользователь для удаления не найден."); });
+        }).catch((e) => { throw new custom_error_class_1.CustomError(404, "Пользователь для удаления не найден.", e); });
     }
     async create(name, shelflife) {
         const created = (await this.getPeersByFilter({ peerName: name })).length;
@@ -71,7 +72,7 @@ let PeerService = class PeerService {
         };
         await this.prisma.peer.create({
             data: peerData
-        }).catch(e => { throw new custom_error_class_1.CustomError(500, "Ошибка VPN сервера.", e); });
+        }).catch((e) => { throw new custom_error_class_1.CustomError(500, "Ошибка VPN сервера.", e); });
         await this.wgcore._regenWgConf(await this.getPeersByFilter({ banned: false }));
         return await this.wgcore._genPeerConnectConfig(peerData);
     }

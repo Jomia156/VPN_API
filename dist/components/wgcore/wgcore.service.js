@@ -12,18 +12,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.WgcoreService = void 0;
 const child_process_1 = require("child_process");
 const common_1 = require("@nestjs/common");
-const prisma_service_1 = require("../prisma/prisma.service");
 const fs_1 = require("fs");
 let WgcoreService = class WgcoreService {
-    prisma;
     wgConfHeader;
     wgConfPath;
     wgServerIp;
     wgServerPort;
     wgPublicKey;
     wgPrivateKey;
-    constructor(prisma) {
-        this.prisma = prisma;
+    constructor() {
         this.wgConfHeader = ((0, fs_1.readFileSync)(process.env.WGHeaderPath || "")).toString();
         this.wgConfPath = process.env.WGConfPath || "";
         this.wgServerIp = process.env.WGServerIp || "";
@@ -74,6 +71,6 @@ let WgcoreService = class WgcoreService {
 exports.WgcoreService = WgcoreService;
 exports.WgcoreService = WgcoreService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [])
 ], WgcoreService);
 //# sourceMappingURL=wgcore.service.js.map
