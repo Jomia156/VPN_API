@@ -21,19 +21,39 @@ let PeerController = class PeerController {
         this.peerService = peerService;
     }
     async getAll(req, res) {
-        return await this.peerService.getAllPeers();
+        const result = {
+            status: 200,
+            data: await this.peerService.getAllPeers()
+        };
+        res.status(result.status).json(result);
     }
     async getByFilter(req, res, filter) {
-        return await this.peerService.getPeersByFilter({ ...filter });
+        const result = {
+            status: 200,
+            data: await this.peerService.getPeersByFilter({ ...filter })
+        };
+        res.status(result.status).json(result);
     }
     async getById(req, res, params) {
-        return await this.peerService.removePeer(params.id);
+        const result = {
+            status: 204,
+            data: await this.peerService.removePeer(params.id)
+        };
+        res.status(result.status).json(result);
     }
     async create(createPeerDTO, req, res) {
-        return await this.peerService.create(createPeerDTO.peerName, createPeerDTO.shelflife);
+        const result = {
+            status: 204,
+            data: await this.peerService.create(createPeerDTO.peerName, createPeerDTO.shelflife)
+        };
+        res.status(result.status).json(result);
     }
     async update(updatePeerDTO, req, res) {
-        return await this.peerService.updatePeer(updatePeerDTO);
+        const result = {
+            status: 204,
+            data: await this.peerService.updatePeer(updatePeerDTO)
+        };
+        res.status(result.status).json(result);
     }
 };
 exports.PeerController = PeerController;

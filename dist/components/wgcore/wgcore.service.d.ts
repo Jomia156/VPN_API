@@ -1,4 +1,4 @@
-import { PeerDTO } from './wgcore.dto';
+import type { PeerDTO } from './wgcore.dto';
 export declare class WgcoreService {
     private wgConfHeader;
     private wgConfPath;

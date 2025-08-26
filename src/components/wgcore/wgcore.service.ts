@@ -1,6 +1,6 @@
 import {execSync} from 'child_process';
 import {Injectable} from '@nestjs/common';
-import {FilterDTO,UpdatePeerDTO,PeerDTO} from './wgcore.dto'
+import type {FilterDTO,UpdatePeerDTO,PeerDTO} from './wgcore.dto'
 import {PrismaService} from "../prisma/prisma.service"
 import {readFileSync,writeFileSync} from "fs"
 import {CustomError} from "../error-handler/custom-error.class"
