@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PeerController = void 0;
 const common_1 = require("@nestjs/common");
 const peer_service_1 = require("./peer.service");
+const wgcore_dto_1 = require("../components/wgcore/wgcore.dto");
 let PeerController = class PeerController {
     peerService;
     constructor(peerService) {
@@ -28,6 +29,7 @@ let PeerController = class PeerController {
         res.status(result.status).json(result);
     }
     async getByFilter(req, res, filter) {
+        console.log(filter);
         const result = {
             status: 200,
             data: await this.peerService.getPeersByFilter({ ...filter })
@@ -42,6 +44,7 @@ let PeerController = class PeerController {
         res.status(result.status).json(result);
     }
     async create(createPeerDTO, req, res) {
+        console.log(createPeerDTO);
         const result = {
             status: 204,
             data: await this.peerService.create(createPeerDTO.peerName, createPeerDTO.shelflife)
@@ -71,7 +74,7 @@ __decorate([
     __param(1, (0, common_1.Res)()),
     __param(2, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object, Object]),
+    __metadata("design:paramtypes", [Object, Object, wgcore_dto_1.FilterDTO]),
     __metadata("design:returntype", Promise)
 ], PeerController.prototype, "getByFilter", null);
 __decorate([
@@ -89,7 +92,7 @@ __decorate([
     __param(1, (0, common_1.Req)()),
     __param(2, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object, Object]),
+    __metadata("design:paramtypes", [wgcore_dto_1.CreatePeerDTO, Object, Object]),
     __metadata("design:returntype", Promise)
 ], PeerController.prototype, "create", null);
 __decorate([
@@ -98,7 +101,7 @@ __decorate([
     __param(1, (0, common_1.Req)()),
     __param(2, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object, Object]),
+    __metadata("design:paramtypes", [wgcore_dto_1.UpdatePeerDTO, Object, Object]),
     __metadata("design:returntype", Promise)
 ], PeerController.prototype, "update", null);
 exports.PeerController = PeerController = __decorate([

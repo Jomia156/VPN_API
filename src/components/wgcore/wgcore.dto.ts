@@ -1,25 +1,91 @@
-export type FilterDTO = {
-  AllowedIps?:string,
-  peerName?:string
-  banned?:boolean
+import {
+    IsBoolean,
+    IsNotEmpty,
+    IsNumber,
+    IsOptional,
+    IsString,
+    IsDate
+} from 'class-validator';
+
+export class PeerDTO {
+    @IsNumber()
+    @IsOptional()
+    id?: number
+
+    @IsString()
+    @IsNotEmpty()
+    peerName: string
+
+    @IsString()
+    @IsNotEmpty()
+    PrivateKey: string
+
+    @IsString()
+    @IsNotEmpty()
+    PublicKey: string
+
+    @IsString()
+    @IsNotEmpty()
+    PresharedKey: string
+
+    @IsString()
+    @IsNotEmpty()
+    AllowedIPs: string
+
+    @IsDate()
+    @IsOptional()
+    created_date?: Date
+
+    @IsDate()
+    @IsNotEmpty()
+    shelflife: Date
+
+    @IsBoolean()
+    @IsOptional()
+    banned?: boolean
 }
 
-export type UpdatePeerDTO = {
-  id:number,
-  peerName?:string,
-  banned?:boolean,
-  shelflife?:string
+export class CreatePeerDTO {
+
+    @IsString()
+    @IsNotEmpty()
+    peerName: string
+
+    @IsString()
+    @IsNotEmpty()
+    shelflife: Date
 }
 
-export type PeerDTO = {
-  id?:number,
-  peerName:string,
-  PrivateKey:string,
-  PublicKey:string,
-  PresharedKey:string,
-  AllowedIPs:string,
-  created_date?:Date,
-  shelflife:Date,
-  banned?:boolean 
+export class FilterDTO {
+
+    @IsString()
+    @IsOptional()
+    AllowedIps?: string
+
+    @IsString()
+    @IsOptional()
+    peerName?: string
+
+    @IsBoolean()
+    @IsOptional()
+    banned?: boolean
 }
 
+export class UpdatePeerDTO {
+    
+    @IsNumber()
+    @IsNotEmpty()
+    id: number
+    
+    @IsString()
+    @IsOptional()
+    peerName?:string
+    
+    @IsBoolean()
+    @IsOptional()
+    banned?:boolean
+    
+    @IsDate()
+    @IsOptional()
+    shelflife?:Date
+}

@@ -3,7 +3,7 @@ import type {Request, Response} from "express";
 import {WgcoreService} from "../components/wgcore/wgcore.service"
 import {PeerService} from "./peer.service"
 import {CustomError} from "../components/error-handler/custom-error.class"
-import type {FilterDTO,UpdatePeerDTO,PeerDTO} from '../components/wgcore/wgcore.dto'
+import {CreatePeerDTO, FilterDTO,UpdatePeerDTO,PeerDTO} from '../components/wgcore/wgcore.dto'
 
 
 
@@ -25,6 +25,7 @@ export class PeerController {
   
   @Get('/filter')
   async getByFilter(@Req() req:Request, @Res() res:Response, @Query() filter:FilterDTO) {
+      console.log(filter)
       const result = {
           status:200,
           data:await this.peerService.getPeersByFilter({...filter})
@@ -42,7 +43,8 @@ export class PeerController {
   }
   
   @Post()
-  async create(@Body() createPeerDTO:{peerName:string, shelflife:string}, @Req() req:Request, @Res() res:Response) {
+  async create(@Body() createPeerDTO:CreatePeerDTO, @Req() req:Request, @Res() res:Response) {
+      console.log(createPeerDTO)
       const result = {
           status:204,
           data:await this.peerService.create(createPeerDTO.peerName, createPeerDTO.shelflife)

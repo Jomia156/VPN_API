@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { PeerService } from "./peer.service";
-import type { FilterDTO, UpdatePeerDTO } from '../components/wgcore/wgcore.dto';
+import { CreatePeerDTO, FilterDTO, UpdatePeerDTO } from '../components/wgcore/wgcore.dto';
 export declare class PeerController {
     private peerService;
     constructor(peerService: PeerService);
@@ -9,9 +9,6 @@ export declare class PeerController {
     getById(req: Request, res: Response, params: {
         id: string;
     }): Promise<void>;
-    create(createPeerDTO: {
-        peerName: string;
-        shelflife: string;
-    }, req: Request, res: Response): Promise<void>;
+    create(createPeerDTO: CreatePeerDTO, req: Request, res: Response): Promise<void>;
     update(updatePeerDTO: UpdatePeerDTO, req: Request, res: Response): Promise<void>;
 }

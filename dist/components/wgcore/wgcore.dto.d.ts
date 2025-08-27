@@ -1,15 +1,4 @@
-export type FilterDTO = {
-    AllowedIps?: string;
-    peerName?: string;
-    banned?: boolean;
-};
-export type UpdatePeerDTO = {
-    id: number;
-    peerName?: string;
-    banned?: boolean;
-    shelflife?: string;
-};
-export type PeerDTO = {
+export declare class PeerDTO {
     id?: number;
     peerName: string;
     PrivateKey: string;
@@ -19,4 +8,19 @@ export type PeerDTO = {
     created_date?: Date;
     shelflife: Date;
     banned?: boolean;
-};
+}
+export declare class CreatePeerDTO {
+    peerName: string;
+    shelflife: Date;
+}
+export declare class FilterDTO {
+    AllowedIps?: string;
+    peerName?: string;
+    banned?: boolean;
+}
+export declare class UpdatePeerDTO {
+    id: number;
+    peerName?: string;
+    banned?: boolean;
+    shelflife?: Date;
+}
