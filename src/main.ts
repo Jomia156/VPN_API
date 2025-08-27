@@ -4,8 +4,9 @@ import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3000);
-
-  app.useGlobalPipes(new ValidationPipe({ disableErrorMessages: false, errorHttpStatusCode: 422 ,  transform: true }));
+  app.useGlobalPipes(new ValidationPipe({ disableErrorMessages: true, errorHttpStatusCode: 422 ,  transform: true,
+    transformOptions: { enableImplicitConversion: true },
+ }));
+ await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
