@@ -51,13 +51,17 @@ export class CreatePeerDTO {
     @IsNotEmpty()
     peerName: string
 
-    @IsString()
+    @IsDate()
     @IsNotEmpty()
-    shelflife: Date
+    shelflife: Date 
 }
 
 export class FilterDTO {
-
+    
+    @IsNumber()
+    @IsOptional()
+    id?:number
+    
     @IsString()
     @IsOptional()
     AllowedIps?: string
@@ -74,8 +78,8 @@ export class FilterDTO {
 export class UpdatePeerDTO {
     
     @IsNumber()
-    @IsNotEmpty()
-    id: number
+    @IsOptional()
+    id?: number
     
     @IsString()
     @IsOptional()
@@ -88,4 +92,11 @@ export class UpdatePeerDTO {
     @IsDate()
     @IsOptional()
     shelflife?:Date
+}
+
+export class PeerID {
+    
+    @IsNumber()
+    @IsNotEmpty()
+    id:number
 }
