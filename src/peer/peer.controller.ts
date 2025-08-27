@@ -4,6 +4,9 @@ import {WgcoreService} from "../components/wgcore/wgcore.service"
 import {PeerService} from "./peer.service"
 import {CustomError} from "../components/error-handler/custom-error.class"
 import {PeerID, CreatePeerDTO, FilterDTO,UpdatePeerDTO,PeerDTO} from '../components/wgcore/wgcore.dto'
+import type {RequestProp} from "../publicDTO"
+import {error_handler} from "../components/error-handler/errorHandler.decorator"
+
 
 @Controller('peer')
 export class PeerController {
@@ -11,38 +14,38 @@ export class PeerController {
   constructor(private peerService:PeerService){}
   
   @Get("/all")
-  async getAll(@Query() filter:FilterDTO, @Req() req:Request, @Res() res:Response) {
-    const result = {
-        status:200,
+  @error_handler
+  async getAll(@Req() req:Request, @Res() res:Response, @Query() filter:FilterDTO):Promise<RequestProp> {
+    return {
+        statusCode:200,
         data:await this.peerService.getPeers(filter)
     }
-    res.status(result.status).json(result)
   }
   
   @Delete('/:id')
-  async getById(@Req() req:Request, @Res() res:Response, @Param() params:PeerID) {
-      const result = {
-          status:204,
+  @error_handler
+  async getById(@Req() req:Request, @Res() res:Response, @Param() params:PeerID):Promise<RequestProp> {
+      return {
+          statusCode:204,
           data:await this.peerService.removePeer(params.id)
       }
-      res.status(result.status).json(result)
   }
   
   @Post()
-  async create(@Body() createPeerDTO:CreatePeerDTO, @Req() req:Request, @Res() res:Response) {
-      const result = {
-          status:201,
+  @error_handler
+  async create(@Req() req:Request, @Res() res:Response, @Body() createPeerDTO:CreatePeerDTO):Promise<RequestProp> {
+      return {
+          statusCode:201,
           data:await this.peerService.create(createPeerDTO)
       }
-      res.status(result.status).json(result)
   }
   
   @Put("/:id")
-  async update(@Query() params: PeerID, @Body() updatePeerDTO:UpdatePeerDTO, @Req() req:Request, @Res() res:Response) {
-      const result = {
-          status:204,
+  @error_handler
+  async update(@Req() req:Request, @Res() res:Response, @Param() params: PeerID, @Body() updatePeerDTO:UpdatePeerDTO):Promise<RequestProp> {
+      return {
+          statusCode:201,
           data:await this.peerService.updatePeer({...updatePeerDTO, ...params})
       }
-      res.status(result.status).json(result)
   }
 }

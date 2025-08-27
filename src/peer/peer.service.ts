@@ -28,13 +28,6 @@ export class PeerService {
         return await this.prisma.peer.findMany({where:filter}).catch((e)=>{throw new CustomError(500, "Ошибка VPN сервера.", e)})
     }
     
-    async getPeersByFilter(filter: FilterDTO):Promise<Array<PeerDTO>> {
-        let result:Array<PeerDTO> = []
-        await this.prisma.peer.findMany({
-            where: filter
-        }).then((data)=>{result = data }).catch((e)=>{[]})
-        return result
-    }
     
     async updatePeer(updatePeerData: UpdatePeerDTO):Promise<void> {
         await this.prisma.peer.update({
@@ -43,6 +36,7 @@ export class PeerService {
             },
             data: updatePeerData
         }).catch((e)=>{throw new CustomError(404, "Пользователь для изменения не найден.", e)})
+        this.wgcore._regenWgConf(await this.getPeers({banned:false}))
     }
     
     async removePeer(id):Promise<void> {
@@ -50,10 +44,11 @@ export class PeerService {
             where: {
                 id
             }}).catch((e)=>{throw new CustomError(404, "Пользователь для удаления не найден.", e)})
+        this.wgcore._regenWgConf(await this.getPeers({banned:false}))
     }
     
     async create(createPeerDTO:CreatePeerDTO):Promise<string> {
-        const created = (await this.getPeersByFilter({peerName:createPeerDTO.peerName})).length
+        const created = (await this.getPeers({peerName:createPeerDTO.peerName})).length
         if (created) {
             throw new CustomError(406, "Пользователь с таким именем уже существует.", {})    
         }
@@ -69,9 +64,7 @@ export class PeerService {
             data: peerData
         }).catch((e)=>{throw new CustomError(500, "Ошибка VPN сервера.", e)})
     
-        await this.wgcore._regenWgConf(await this.getPeersByFilter({banned:false}))
+        this.wgcore._regenWgConf(await this.getPeers({banned:false}))
         return await this.wgcore._genPeerConnectConfig(peerData)
     }
-    
-    
 }
