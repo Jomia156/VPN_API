@@ -14,13 +14,17 @@ export declare class CreatePeerDTO {
     shelflife: Date;
 }
 export declare class FilterDTO {
+    id?: number;
     AllowedIps?: string;
     peerName?: string;
     banned?: boolean;
 }
 export declare class UpdatePeerDTO {
-    id: number;
+    id?: number;
     peerName?: string;
     banned?: boolean;
     shelflife?: Date;
+}
+export declare class PeerID {
+    id: number;
 }

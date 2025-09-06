@@ -13,12 +13,15 @@ const logger_module_1 = require("./components/logger/logger.module");
 const peer_module_1 = require("./peer/peer.module");
 const wgcore_module_1 = require("./components/wgcore/wgcore.module");
 const config_1 = require("@nestjs/config");
+const server_module_1 = require("./server/server.module");
+const auth_module_1 = require("./auth/auth.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [config_1.ConfigModule.forRoot({ isGlobal: true }), peer_module_1.PeerModule, wgcore_module_1.WgcoreModule, logger_module_1.LoggerModule, prisma_module_1.PrismaModule],
+        imports: [config_1.ConfigModule.forRoot({ isGlobal: true }), peer_module_1.PeerModule, wgcore_module_1.WgcoreModule, logger_module_1.LoggerModule, prisma_module_1.PrismaModule, server_module_1.ServerModule, auth_module_1.AuthModule],
+        providers: []
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

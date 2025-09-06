@@ -32,15 +32,8 @@ let PeerService = class PeerService {
             take: -1
         }).then(data => (data[0]?.id | 0) + 2).catch((e) => { throw new custom_error_class_1.CustomError(500, "Ошибка VPN сервера.", e); });
     }
-    async getAllPeers() {
-        return await this.prisma.peer.findMany().catch((e) => { throw new custom_error_class_1.CustomError(500, "Ошибка VPN сервера.", e); });
-    }
-    async getPeersByFilter(filter) {
-        let result = [];
-        await this.prisma.peer.findMany({
-            where: filter
-        }).then((data) => { result = data; }).catch((e) => { []; });
-        return result;
+    async getPeers(filter) {
+        return await this.prisma.peer.findMany({ where: filter }).catch((e) => { throw new custom_error_class_1.CustomError(500, "Ошибка VPN сервера.", e); });
     }
     async updatePeer(updatePeerData) {
         await this.prisma.peer.update({
@@ -49,6 +42,7 @@ let PeerService = class PeerService {
             },
             data: updatePeerData
         }).catch((e) => { throw new custom_error_class_1.CustomError(404, "Пользователь для изменения не найден.", e); });
+        this.wgcore._regenWgConf(await this.getPeers({ banned: false }));
     }
     async removePeer(id) {
         await this.prisma.peer.delete({
@@ -56,24 +50,25 @@ let PeerService = class PeerService {
                 id
             }
         }).catch((e) => { throw new custom_error_class_1.CustomError(404, "Пользователь для удаления не найден.", e); });
+        this.wgcore._regenWgConf(await this.getPeers({ banned: false }));
     }
-    async create(name, shelflife) {
-        const created = (await this.getPeersByFilter({ peerName: name })).length;
+    async create(createPeerDTO) {
+        const created = (await this.getPeers({ peerName: createPeerDTO.peerName })).length;
         if (created) {
             throw new custom_error_class_1.CustomError(406, "Пользователь с таким именем уже существует.", {});
         }
         const id = await this._getNewPeerId();
         const peerKeys = await this.wgcore._genPeerKeys();
         const peerData = {
-            peerName: name,
-            shelflife: shelflife,
+            peerName: createPeerDTO.peerName,
+            shelflife: createPeerDTO.shelflife,
             AllowedIPs: `10.66.66.${id}/32,fd42:42:42::${id}/128`,
             ...peerKeys
         };
         await this.prisma.peer.create({
             data: peerData
         }).catch((e) => { throw new custom_error_class_1.CustomError(500, "Ошибка VPN сервера.", e); });
-        await this.wgcore._regenWgConf(await this.getPeersByFilter({ banned: false }));
+        this.wgcore._regenWgConf(await this.getPeers({ banned: false }));
         return await this.wgcore._genPeerConnectConfig(peerData);
     }
 };

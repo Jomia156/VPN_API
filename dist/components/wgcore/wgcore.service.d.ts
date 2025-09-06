@@ -16,4 +16,7 @@ export declare class WgcoreService {
     }>;
     _genPeerConfig(peer: PeerDTO): Promise<string>;
     _genPeerConnectConfig(peer: PeerDTO): Promise<string>;
+    stop(): Promise<void>;
+    start(): Promise<void>;
+    reboot(): Promise<void>;
 }

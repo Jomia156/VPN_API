@@ -71,6 +71,17 @@ export class WgcoreService {
         clientConfigString += "\nAllowedIPs=0.0.0.0/0,::/0"
         return clientConfigString
     }
+    
+    public async stop() {
+        execSync("service wg-quick@wg0 stop")
+    }
+    
+    public async start() {
+        execSync("service wg-quick@wg0 start")
+    }
+    
+    public async reboot() {
+        execSync("service wg-quick@wg0 restart")
+    }
 
 }
-

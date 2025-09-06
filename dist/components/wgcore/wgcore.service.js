@@ -67,6 +67,15 @@ let WgcoreService = class WgcoreService {
         clientConfigString += "\nAllowedIPs=0.0.0.0/0,::/0";
         return clientConfigString;
     }
+    async stop() {
+        (0, child_process_1.execSync)("service wg-quick@wg0 stop");
+    }
+    async start() {
+        (0, child_process_1.execSync)("service wg-quick@wg0 start");
+    }
+    async reboot() {
+        (0, child_process_1.execSync)("service wg-quick@wg0 restart");
+    }
 };
 exports.WgcoreService = WgcoreService;
 exports.WgcoreService = WgcoreService = __decorate([

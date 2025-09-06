@@ -5,8 +5,10 @@ const app_module_1 = require("./app.module");
 const common_1 = require("@nestjs/common");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
+    app.useGlobalPipes(new common_1.ValidationPipe({ disableErrorMessages: true, errorHttpStatusCode: 422, transform: true,
+        transformOptions: { enableImplicitConversion: true },
+    }));
     await app.listen(process.env.PORT ?? 3000);
-    app.useGlobalPipes(new common_1.ValidationPipe({ disableErrorMessages: false, errorHttpStatusCode: 422, transform: true }));
 }
 bootstrap();
 //# sourceMappingURL=main.js.map

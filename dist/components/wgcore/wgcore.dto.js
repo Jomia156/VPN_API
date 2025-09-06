@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdatePeerDTO = exports.FilterDTO = exports.CreatePeerDTO = exports.PeerDTO = void 0;
+exports.PeerID = exports.UpdatePeerDTO = exports.FilterDTO = exports.CreatePeerDTO = exports.PeerDTO = void 0;
 const class_validator_1 = require("class-validator");
 class PeerDTO {
     id;
@@ -79,16 +79,22 @@ __decorate([
     __metadata("design:type", String)
 ], CreatePeerDTO.prototype, "peerName", void 0);
 __decorate([
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsDate)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", Date)
 ], CreatePeerDTO.prototype, "shelflife", void 0);
 class FilterDTO {
+    id;
     AllowedIps;
     peerName;
     banned;
 }
 exports.FilterDTO = FilterDTO;
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], FilterDTO.prototype, "id", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
@@ -113,7 +119,7 @@ class UpdatePeerDTO {
 exports.UpdatePeerDTO = UpdatePeerDTO;
 __decorate([
     (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], UpdatePeerDTO.prototype, "id", void 0);
 __decorate([
@@ -131,4 +137,13 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Date)
 ], UpdatePeerDTO.prototype, "shelflife", void 0);
+class PeerID {
+    id;
+}
+exports.PeerID = PeerID;
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", Number)
+], PeerID.prototype, "id", void 0);
 //# sourceMappingURL=wgcore.dto.js.map

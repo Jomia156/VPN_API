@@ -12,85 +12,82 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PeerController = void 0;
+exports.ServerController = void 0;
 const common_1 = require("@nestjs/common");
-const peer_service_1 = require("./peer.service");
-const wgcore_dto_1 = require("../components/wgcore/wgcore.dto");
+const server_service_1 = require("./server.service");
 const errorHandler_decorator_1 = require("../components/error-handler/errorHandler.decorator");
-let PeerController = class PeerController {
-    peerService;
-    constructor(peerService) {
-        this.peerService = peerService;
+const wgcore_service_1 = require("../components/wgcore/wgcore.service");
+let ServerController = class ServerController {
+    serverService;
+    wgcoreService;
+    constructor(serverService, wgcoreService) {
+        this.serverService = serverService;
+        this.wgcoreService = wgcoreService;
     }
-    async getAll(req, res, filter) {
+    async rebootServer(req, res) {
+        this.serverService.reboot();
         return {
-            statusCode: 200,
-            data: await this.peerService.getPeers(filter)
+            statusCode: 200
         };
     }
-    async getById(req, res, params) {
+    async stopWgService(req, res) {
+        this.wgcoreService.stop();
         return {
-            statusCode: 204,
-            data: await this.peerService.removePeer(params.id)
+            statusCode: 200
         };
     }
-    async create(req, res, createPeerDTO) {
+    async startWGService(req, res) {
+        this.wgcoreService.start();
         return {
-            statusCode: 201,
-            data: await this.peerService.create(createPeerDTO)
+            statusCode: 200
         };
     }
-    async update(req, res, params, updatePeerDTO) {
+    async rebotWGService(req, res) {
+        this.wgcoreService.reboot();
         return {
-            statusCode: 201,
-            data: await this.peerService.updatePeer({ ...updatePeerDTO, ...params })
+            statusCode: 200
         };
     }
 };
-exports.PeerController = PeerController;
+exports.ServerController = ServerController;
 __decorate([
-    (0, common_1.Get)("/all"),
+    (0, common_1.Get)("reboot"),
     errorHandler_decorator_1.error_handler,
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Res)()),
-    __param(2, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object, wgcore_dto_1.FilterDTO]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
-], PeerController.prototype, "getAll", null);
+], ServerController.prototype, "rebootServer", null);
 __decorate([
-    (0, common_1.Delete)('/:id'),
+    (0, common_1.Get)("wg/stop"),
     errorHandler_decorator_1.error_handler,
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Res)()),
-    __param(2, (0, common_1.Param)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object, wgcore_dto_1.PeerID]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
-], PeerController.prototype, "getById", null);
+], ServerController.prototype, "stopWgService", null);
 __decorate([
-    (0, common_1.Post)(),
+    (0, common_1.Get)("wg/start"),
     errorHandler_decorator_1.error_handler,
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Res)()),
-    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object, wgcore_dto_1.CreatePeerDTO]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
-], PeerController.prototype, "create", null);
+], ServerController.prototype, "startWGService", null);
 __decorate([
-    (0, common_1.Put)("/:id"),
+    (0, common_1.Get)("wg/reboot"),
     errorHandler_decorator_1.error_handler,
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Res)()),
-    __param(2, (0, common_1.Param)()),
-    __param(3, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object, wgcore_dto_1.PeerID, wgcore_dto_1.UpdatePeerDTO]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
-], PeerController.prototype, "update", null);
-exports.PeerController = PeerController = __decorate([
-    (0, common_1.Controller)('peer'),
-    __metadata("design:paramtypes", [peer_service_1.PeerService])
-], PeerController);
-//# sourceMappingURL=peer.controller.js.map
+], ServerController.prototype, "rebotWGService", null);
+exports.ServerController = ServerController = __decorate([
+    (0, common_1.Controller)('server'),
+    __metadata("design:paramtypes", [server_service_1.ServerService, wgcore_service_1.WgcoreService])
+], ServerController);
+//# sourceMappingURL=server.controller.js.map
